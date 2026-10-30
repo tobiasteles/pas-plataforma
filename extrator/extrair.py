@@ -97,7 +97,7 @@ def eventos_da_pagina(pdf_page, num_pag, pdf_path):
     page = pdf_page
     W, H = page.width, page.height
     meio = W / 2
-    TOPO, BASE = 44, 815
+    TOPO, BASE = 44, min(815, H - 1)
     ev = []
 
     # barra "PARTE n" no meio do cabecalho
@@ -218,14 +218,32 @@ def rotulo_da_prova(pdf):
     return tipo, int(m.group(2))
 
 
-def processar_pdf(caminho):
-    pdf = pdfplumber.open(str(caminho))
+def processar_pdf(caminho, nome=None, ano_manual=None, etapa_manual=None):
+    """nome / ano_manual / etapa_manual (opcionais) sobrescrevem o que seria detectado no PDF."""
+    # 'with' fecha o arquivo no fim (no Windows, PDF aberto impede apagar a pasta temporaria)
+    with pdfplumber.open(str(caminho)) as pdf:
+        return _processar_pdf(pdf, caminho, nome, ano_manual, etapa_manual)
+
+
+def _processar_pdf(pdf, caminho, nome, ano_manual, etapa_manual):
     tipo, ano = rotulo_da_prova(pdf)
-    if ano is None:
-        print(f"  ! nao achei o rotulo da prova em {caminho.name}; usando nome do arquivo")
-        tipo, ano = "Prova", 0
-    prova = f"PAS1-{tipo}-{ano}"
-    prova_nome = f"PAS 1 – {tipo} {ano}"
+    texto1 = pdf.pages[0].extract_text() or ""
+    m_et = re.search(r"PAS\s*(\d)", texto1)
+    etapa = etapa_manual or (f"PAS{m_et.group(1)}" if m_et and m_et.group(1) in "123" else "PAS1")
+    if ano_manual:
+        ano = int(ano_manual)
+    if nome:
+        prova_nome = nome.strip()
+        prova = slug(prova_nome)
+        tipo = tipo or "Prova"
+        ano = ano or 0
+    else:
+        if ano is None:
+            print(f"  ! nao achei o rotulo da prova em {caminho.name}")
+            tipo, ano = "Prova", 0
+        tipo = tipo or "Prova"
+        prova = f"{etapa}-{tipo}-{ano}"
+        prova_nome = f"{etapa[:3]} {etapa[3:]} – {tipo} {ano}"
 
     esperado = 1
     parte = 1
@@ -311,6 +329,8 @@ def processar_pdf(caminho):
             else:
                 bloco["ctx"].append(txt)
     fechar_bloco()
+    for q in questoes:
+        q["etapa"] = etapa
     return contextos, questoes
 
 

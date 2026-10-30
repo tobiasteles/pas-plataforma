@@ -1,3 +1,10 @@
 import type { NextConfig } from "next";
-const config: NextConfig = { experimental: { serverActions: { bodySizeLimit: "10mb" } } };
+
+const config = {
+  experimental: {
+    serverActions: { bodySizeLimit: "50mb" },
+    middlewareClientMaxBodySize: "50mb",
+  },
+} as NextConfig;
+
 export default config;
