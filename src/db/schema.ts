@@ -31,6 +31,7 @@ export const contexts = pgTable("contexts", {
 export const storedImages = pgTable("stored_images", {
   name: text("name").primaryKey(),
   data: text("data").notNull(),
+  mime: text("mime").notNull().default("image/png"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -47,6 +48,17 @@ export const topics = pgTable("topics", {
   slug: text("slug").notNull(),
 }, (t) => [uniqueIndex("topics_subject_slug").on(t.subjectId, t.slug)]);
 
+/** Uma prova (ex.: "PAS 1 – Edital 2025"). O nome é o mesmo texto guardado em questions.examLabel. */
+export const exams = pgTable("exams", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  year: integer("year").notNull(),
+  stage: stageEnum("stage").notNull(),
+  subprogram: text("subprogram"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const questions = pgTable("questions", {
   id: text("id").primaryKey(), // ex.: PAS1-Edital-2025-q42
   text: text("text").notNull(), // Markdown/HTML
@@ -54,6 +66,7 @@ export const questions = pgTable("questions", {
   stage: stageEnum("stage").notNull(),
   subprogram: text("subprogram"), // ex.: 2023-2025
   examLabel: text("exam_label").notNull(), // ex.: PAS 1 – Edital 2025
+  examId: integer("exam_id").references(() => exams.id, { onDelete: "set null" }),
   number: integer("number").notNull(),
   language: text("language"), // Espanhola | Francesa | Inglesa (itens de língua)
   itemType: itemTypeEnum("item_type").notNull(),

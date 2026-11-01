@@ -1,11 +1,65 @@
-@tailwind base; @tailwind components; @tailwind utilities;
-:root { color-scheme: light dark; }
-body { @apply bg-stone-50 text-stone-900 antialiased; }
-@media (prefers-color-scheme: dark) { body { @apply bg-stone-950 text-stone-100; } }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens em "R G B" para o Tailwind aceitar opacidade (ex.: bg-mata/10). */
+:root {
+  --folha: 237 243 238;   /* #EDF3EE */
+  --papel: 250 252 250;   /* #FAFCFA */
+  --grafite: 24 35 31;    /* #18231F */
+  --suave: 82 97 89;      /* #526159 */
+  --linha: 203 216 208;   /* #CBD8D0 */
+  --mata: 20 96 74;       /* #14604A */
+  --mata-escura: 15 76 59;
+  --mata-tinta: 220 236 228;
+  --azul: 31 75 127;      /* #1F4B7F */
+  --azul-tinta: 222 232 244;
+  --ipe: 232 185 35;      /* #E8B923 */
+  --acerto: 30 122 76;
+  --acerto-texto: 23 96 59;
+  --acerto-fundo: 220 240 227;
+  --erro: 179 32 63;
+  --erro-fundo: 251 224 229;
+  --duvida-texto: 122 82 0;
+  --duvida-fundo: 251 240 201;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --folha: 14 22 19;     /* #0E1613 */
+    --papel: 21 31 27;     /* #151F1B */
+    --grafite: 228 238 232;
+    --suave: 157 176 166;
+    --linha: 42 58 51;
+    --mata: 92 196 160;    /* #5CC4A0 */
+    --mata-escura: 124 214 182;
+    --mata-tinta: 26 52 43;
+    --azul: 139 180 236;
+    --azul-tinta: 28 42 63;
+    --ipe: 232 185 35;
+    --acerto: 111 211 155;
+    --acerto-texto: 111 211 155;
+    --acerto-fundo: 22 54 38;
+    --erro: 245 138 160;
+    --erro-fundo: 62 24 33;
+    --duvida-texto: 240 205 110;
+    --duvida-fundo: 58 46 14;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  body { @apply bg-folha font-sans text-grafite antialiased; }
+  :focus-visible { outline: 2px solid rgb(var(--azul)); outline-offset: 2px; }
+  ::selection { background: rgb(var(--ipe) / 0.45); }
+  h1, h2, h3 { @apply text-balance; }
+}
+
+/* Mantém os nomes de classe usados nas páginas atuais (card, btn, input, tag) com a nova identidade. */
 @layer components {
-  .card { @apply rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900; }
-  .btn { @apply inline-flex items-center justify-center rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium hover:bg-stone-100 disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-800; }
-  .btn-primary { @apply border-blue-600 bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-500; }
-  .input { @apply w-full rounded-lg border border-stone-300 bg-transparent px-3 py-1.5 text-sm dark:border-stone-700; }
-  .tag { @apply rounded bg-stone-100 px-2 py-0.5 text-xs text-stone-600 dark:bg-stone-800 dark:text-stone-300; }
+  .card { @apply rounded-xl border border-linha bg-papel p-4 shadow-papel; }
+  .btn { @apply inline-flex items-center justify-center rounded-lg border border-linha bg-papel px-3 py-1.5 text-sm font-bold text-grafite transition-colors hover:border-mata/50 hover:bg-mata-tinta disabled:opacity-50; }
+  .btn-primary { @apply border-mata bg-mata text-papel hover:border-mata-escura hover:bg-mata-escura active:translate-y-px; }
+  .input { @apply w-full rounded-lg border border-linha bg-papel px-3 py-1.5 text-sm text-grafite placeholder:text-suave/70; }
+  .tag { @apply rounded-md bg-mata-tinta px-2 py-0.5 text-xs font-bold text-mata; }
 }

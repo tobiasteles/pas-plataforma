@@ -1,0 +1,4 @@
+Coloque aqui a foto da pagina inicial com o nome estudantes.jpg
+(horizontal, uns 1600 x 1100 px, ate ~400 KB).
+Sem esse arquivo, a pagina inicial mostra um item de exemplo.
+Use fotos suas ou de banco com licenca livre (confira a licenca) e, se aparecerem alunos, tenha autorizacao deles ou dos responsaveis.

@@ -11,8 +11,11 @@ export default async function Admin() {
   return (
     <>
       <h1 className="text-2xl font-bold">Administração</h1>
-      <p className="text-sm text-stone-500">{c.q} questões · {c.semGab} sem gabarito · {c.rev} para revisar · {u.n} usuários</p>
-      <div className="flex flex-wrap gap-2"><Link className="btn" href="/admin/questoes">Questões</Link><Link className="btn" href="/admin/obras">Obras</Link><Link className="btn" href="/admin/cursos">Cursos e notas de corte</Link></div>
+      <p className="text-sm text-suave">{c.q} questões, {c.semGab} sem gabarito, {c.rev} para revisar, {u.n} usuários</p>
+      <div className="flex flex-wrap gap-2">
+        <Link className="btn" href="/admin/provas">Provas</Link><Link className="btn" href="/admin/questoes">Questões</Link>
+        <Link className="btn" href="/admin/obras">Obras</Link><Link className="btn" href="/admin/cursos">Cursos e notas de corte</Link>
+      </div>
       <UploadProvas /><ImportGabaritos /><ImportJson />
     </>
   );
