@@ -5,7 +5,11 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 
 const COOKIE = "session";
-const key = () => new TextEncoder().encode(process.env.AUTH_SECRET ?? "dev-inseguro");
+const key = () => {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") throw new Error("AUTH_SECRET não definida");
+  return new TextEncoder().encode(secret ?? "dev-inseguro");
+};
 
 export type Session = { userId: string; role: "student" | "admin"; name: string };
 

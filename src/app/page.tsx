@@ -1,10 +1,14 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { sql } from "drizzle-orm";
 import { db, schema as s } from "@/db";
+import { metadataHome } from "@/lib/seo";
 
 export const revalidate = 3600;
+export const metadata: Metadata = metadataHome;
 
 // Coloque sua foto em public/img/estudantes.jpg (horizontal, uns 1600 x 1100 px). Sem ela, a página mostra um item de exemplo.
 const TEM_FOTO = existsSync(path.join(process.cwd(), "public", "img", "estudantes.jpg"));
@@ -46,7 +50,7 @@ export default async function Home() {
         </div>
 
         {TEM_FOTO ? (
-          <img src="/img/estudantes.jpg" alt="Estudantes estudando juntos" width={1600} height={1100}
+          <Image src="/img/estudantes.jpg" alt="Estudantes estudando juntos para o PAS" width={1600} height={1100} priority sizes="(min-width: 768px) 45vw, 100vw"
             className="aspect-[4/3] w-full rounded-xl border border-linha object-cover shadow-elevado" />
         ) : (
           <figure className="rounded-xl bg-azul-tinta p-5 md:p-7" aria-label="Exemplo de item">

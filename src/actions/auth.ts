@@ -10,6 +10,7 @@ export async function cadastrar(_: FormState, fd: FormData): Promise<FormState> 
   const name = String(fd.get("name") ?? "").trim();
   const email = String(fd.get("email") ?? "").trim().toLowerCase();
   const password = String(fd.get("password") ?? "");
+  if (fd.get("aceite") !== "on") return { error: "Para criar a conta, aceite os Termos de Uso e a Política de Privacidade." };
   if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8)
     return { error: "Preencha nome, e-mail válido e senha com 8+ caracteres." };
   const [exists] = await db.select({ id: s.users.id }).from(s.users).where(eq(s.users.email, email));
@@ -17,7 +18,7 @@ export async function cadastrar(_: FormState, fd: FormData): Promise<FormState> 
   const role = process.env.ADMIN_EMAIL?.toLowerCase() === email ? "admin" : "student";
   const [u] = await db.insert(s.users).values({ name, email, passwordHash: await hashPassword(password), role }).returning();
   await createSession({ userId: u.id, role: u.role, name: u.name });
-  redirect("/questoes");
+  redirect("/bem-vindo");
 }
 
 export async function entrar(_: FormState, fd: FormData): Promise<FormState> {

@@ -33,7 +33,7 @@ export function metadataItem(i: ItemSeo): Metadata {
   const url = `/questao/${i.id}`;
   return {
     title, description, alternates: { canonical: url },
-    openGraph: { type: "article", locale: "pt_BR", siteName: NOME, url, title, description, images: [{ url: `${url}/opengraph-image`, width: 1200, height: 630 }] },
+    openGraph: { type: "article", locale: "pt_BR", siteName: NOME, url, title, description, images: [{ url: "/og.png", width: 1200, height: 630, alt: "Triênio, questões do PAS/UnB" }] },
     twitter: { card: "summary_large_image", title, description },
   };
 }
@@ -49,7 +49,7 @@ export function jsonLdItem(i: ItemSeo) {
       "@id": `${url}#item`,
       name: `Item ${i.number}, ${i.examLabel}`,
       description: limpa(i.text, 300),
-      inLanguage: i.language ? undefined : "pt-BR",
+      inLanguage: "pt-BR",
       learningResourceType: "Questão de prova",
       educationalLevel: "Ensino médio",
       about: i.subject ? { "@type": "Thing", name: i.subject } : undefined,
@@ -63,8 +63,7 @@ export function jsonLdItem(i: ItemSeo) {
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Início", item: SITE },
         { "@type": "ListItem", position: 2, name: "Questões", item: `${SITE}/questoes` },
-        { "@type": "ListItem", position: 3, name: i.examLabel, item: `${SITE}/questoes?prova=${encodeURIComponent(i.examLabel)}` },
-        { "@type": "ListItem", position: 4, name: `Item ${i.number}`, item: url },
+        { "@type": "ListItem", position: 3, name: `${i.examLabel}, item ${i.number}`, item: url },
       ],
     },
   ];

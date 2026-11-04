@@ -3,11 +3,13 @@ import { sql } from "drizzle-orm";
 import { db, schema as s } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { ImportGabaritos, ImportJson, UploadProvas } from "@/components/AdminForms";
+import GabaritoPdf from "@/components/GabaritoPdf";
 
 export default async function Admin() {
   await requireAdmin();
   const [c] = await db.select({ q: sql<number>`count(*)::int`, semGab: sql<number>`count(*) filter (where correct_answer is null and item_type <> 'D')::int`, rev: sql<number>`count(*) filter (where needs_review)::int` }).from(s.questions);
   const [u] = await db.select({ n: sql<number>`count(*)::int` }).from(s.users);
+  const provas = await db.select({ id: s.exams.id, name: s.exams.name }).from(s.exams).orderBy(s.exams.name);
   return (
     <>
       <h1 className="text-2xl font-bold">Administração</h1>
@@ -16,7 +18,7 @@ export default async function Admin() {
         <Link className="btn" href="/admin/provas">Provas</Link><Link className="btn" href="/admin/questoes">Questões</Link>
         <Link className="btn" href="/admin/obras">Obras</Link><Link className="btn" href="/admin/cursos">Cursos e notas de corte</Link>
       </div>
-      <UploadProvas /><ImportGabaritos /><ImportJson />
+      <UploadProvas /><GabaritoPdf provas={provas} /><ImportGabaritos /><ImportJson />
     </>
   );
 }
