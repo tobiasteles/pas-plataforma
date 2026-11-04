@@ -30,4 +30,13 @@ def extrair_bytes(dados: bytes, nome: str | None = None, ano: int | None = None,
             disc = classificar.classificar_local(q, ctx[q["contexto_id"]])
             q["disciplinas"], q["disciplina"] = disc, disc[0]
         imagens = {p.name: base64.b64encode(p.read_bytes()).decode() for p in (tmp / "imagens").glob("*.png")}
-    return {"contextos": contextos, "questoes": questoes, "imagens": imagens}
+    avisos = []
+    for g in extrair.lacunas(questoes):
+        rotulo = f"Língua {g['lingua']}" if g["lingua"] else f"Parte {g['parte']}"
+        msg = f"{rotulo}: itens {g['min']} a {g['max']} ({g['n']} lidos)"
+        if g["faltam"]:
+            msg += f"; faltam {', '.join(map(str, g['faltam'][:20]))}" + ("…" if len(g["faltam"]) > 20 else "")
+        avisos.append(msg)
+    if sum(1 for q in questoes if q["revisar"]):
+        avisos.append(f"{sum(1 for q in questoes if q['revisar'])} itens marcados para revisar (texto muito curto ou muito longo).")
+    return {"contextos": contextos, "questoes": questoes, "imagens": imagens, "avisos": avisos}

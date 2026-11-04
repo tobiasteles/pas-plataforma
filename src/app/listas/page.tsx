@@ -6,7 +6,7 @@ import { criarLista } from "@/actions/lists";
 
 export default async function Listas() {
   const { userId } = await requireUser();
-  const rows = await db.select({ id: s.lists.id, name: s.lists.name, n: sql<number>`(select count(*)::int from list_items li where li.list_id = ${s.lists.id})` })
+  const rows = await db.select({ id: s.lists.id, name: s.lists.name, n: sql<number>`(select count(*)::int from list_items li where li.list_id = lists.id)` })
     .from(s.lists).where(eq(s.lists.userId, userId)).orderBy(s.lists.createdAt);
   return (
     <>

@@ -7,7 +7,7 @@ import ProvaForm from "@/components/ProvaForm";
 
 export default async function AdminProvas() {
   await requireAdmin();
-  const provas = await db.select({ e: s.exams, n: sql<number>`(select count(*)::int from questions where questions.exam_id = ${s.exams.id})` })
+  const provas = await db.select({ e: s.exams, n: sql<number>`(select count(*)::int from questions q where q.exam_id = exams.id)` })
     .from(s.exams).orderBy(desc(s.exams.year), s.exams.name);
   const [{ soltas }] = await db.select({ soltas: sql<number>`count(*)::int` }).from(s.questions).where(sql`exam_id is null`);
   return (

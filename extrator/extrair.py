@@ -218,14 +218,32 @@ def rotulo_da_prova(pdf):
     return tipo, int(m.group(2))
 
 
+def lacunas(questoes):
+    """Por grupo (parte, língua): faixa de números encontrada e números que faltam no meio."""
+    grupos = {}
+    for q in questoes:
+        grupos.setdefault((q["parte"], q["lingua"]), []).append(q["numero"])
+    out = []
+    for (parte, lingua), ns in sorted(grupos.items(), key=lambda kv: (kv[0][0], str(kv[0][1]))):
+        out.append({"parte": parte, "lingua": lingua, "min": min(ns), "max": max(ns), "n": len(set(ns)),
+                    "faltam": sorted(set(range(min(ns), max(ns) + 1)) - set(ns))})
+    return out
+
+
 def processar_pdf(caminho, nome=None, ano_manual=None, etapa_manual=None):
     """nome / ano_manual / etapa_manual (opcionais) sobrescrevem o que seria detectado no PDF."""
     # 'with' fecha o arquivo no fim (no Windows, PDF aberto impede apagar a pasta temporaria)
     with pdfplumber.open(str(caminho)) as pdf:
-        return _processar_pdf(pdf, caminho, nome, ano_manual, etapa_manual)
+        ctx, qs = _processar_pdf(pdf, caminho, nome, ano_manual, etapa_manual, 0)
+        if any(g["faltam"] for g in lacunas(qs)):
+            # um item perdido derruba a sequência: tenta de novo aceitando pular até 3 números
+            ctx2, qs2 = _processar_pdf(pdf, caminho, nome, ano_manual, etapa_manual, 3)
+            if len(qs2) > len(qs):
+                return ctx2, qs2
+        return ctx, qs
 
 
-def _processar_pdf(pdf, caminho, nome, ano_manual, etapa_manual):
+def _processar_pdf(pdf, caminho, nome, ano_manual, etapa_manual, salto=0):
     tipo, ano = rotulo_da_prova(pdf)
     texto1 = pdf.pages[0].extract_text() or ""
     m_et = re.search(r"PAS\s*(\d)", texto1)
@@ -310,8 +328,10 @@ def _processar_pdf(pdf, caminho, nome, ano_manual, etapa_manual):
             if re.match(r"^CEBRASPE", txt):
                 continue
             mi = re.match(r"^(\d{1,3})\s+(\S.*)$", txt)
-            eh_inicio = bool(mi and int(mi.group(1)) == esperado and x0 <= esq + 32)
+            n_lido = int(mi.group(1)) if mi else 0
+            eh_inicio = bool(mi and x0 <= esq + 32 and (n_lido == esperado or (salto and neg and esperado < n_lido <= esperado + salto)))
             if eh_inicio:
+                esperado = n_lido
                 if esperado == 11 and bloco["parte"] == 1:
                     if bloco["itens"]:
                         fechar_bloco()

@@ -124,7 +124,7 @@ export async function enviarProvas(_: ImportState, fd: FormData): Promise<Import
         erros.push(`${f.name}: ${typeof det === "string" ? det : `o extrator respondeu erro ${r.status}`}`);
         continue;
       }
-      const out = (await r.json()) as JsonFile & { imagens: Record<string, string> };
+      const out = (await r.json()) as JsonFile & { imagens: Record<string, string>; avisos?: string[] };
       const imgs = Object.entries(out.imagens ?? {});
       for (const part of chunks(imgs, 20))
         await db.insert(s.storedImages).values(part.map(([name, data]) => ({ name, data }))).onConflictDoNothing();
@@ -133,7 +133,7 @@ export async function enviarProvas(_: ImportState, fd: FormData): Promise<Import
       for (const q of out.questoes) q.imagens = (q.imagens ?? []).map(troca);
       const msg = await gravar(out);
       const rev = out.questoes.filter((q) => q.revisar).length;
-      ok.push(`${f.name} → "${out.questoes[0]?.prova}": ${msg} ${imgs.length} figuras.${rev ? ` ${rev} marcadas para revisar.` : ""}`);
+      ok.push(`${f.name} → "${out.questoes[0]?.prova}": ${msg} ${imgs.length} figuras.${rev ? ` ${rev} marcadas para revisar.` : ""}${out.avisos?.length ? "\n" + out.avisos.map((a) => `   • ${a}`).join("\n") : ""}`);
     } catch (e) {
       const m = e instanceof Error ? e.message : "";
       const cause = e instanceof Error ? (e.cause as { code?: string } | undefined)?.code : undefined;
