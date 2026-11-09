@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { listSubjects, listWorks, searchQuestions, type QuestionFilters, type QuestionView } from "@/lib/queries";
 import QuestionCard from "@/components/QuestionCard";
 import AddToList from "@/components/AddToList";
+import QuestionSelector from "@/components/QuestionSelector";
 
 type SP = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || undefined;
@@ -34,6 +35,7 @@ export default async function Questoes({ searchParams }: { searchParams: SP }) {
     <label className="text-xs text-stone-500">{label}
       <select name={name} defaultValue={cur ?? ""} className="input mt-0.5"><option value="">Todas</option>{opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}</select>
     </label>);
+  const questionIds = res.items.map((q) => q.id);
   return (
     <>
       <form className="card grid gap-3 sm:grid-cols-3 lg:grid-cols-4">

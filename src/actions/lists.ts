@@ -34,3 +34,11 @@ export async function excluirLista(listId: number) {
   await db.delete(s.lists).where(and(eq(s.lists.id, listId), eq(s.lists.userId, userId)));
   redirect("/listas");
 }
+ export async function adicionarVariasNaLista(listId: number, questionIds: string[]) {
+   const { userId } = await requireUser();
+   const [l] = await db.select().from(s.lists).where(and(eq(s.lists.id, listId), eq(s.lists.userId, userId)));
+   if (!l) throw new Error("Lista não encontrada");
+   if (questionIds.length === 0) return;
+   await db.insert(s.listItems).values(questionIds.map((questionId) => ({ listId, questionId }))).onConflictDoNothing();
+   revalidatePath(`/listas/${listId}`);
+ }

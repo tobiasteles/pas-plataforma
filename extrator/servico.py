@@ -1,5 +1,6 @@
 """Núcleo do serviço: recebe os bytes de um PDF de prova e devolve questões + imagens (base64)."""
 import base64
+import os
 import hashlib
 import tempfile
 import threading
@@ -29,6 +30,18 @@ def extrair_bytes(dados: bytes, nome: str | None = None, ano: int | None = None,
         for q in questoes:
             disc = classificar.classificar_local(q, ctx[q["contexto_id"]])
             q["disciplinas"], q["disciplina"] = disc, disc[0]
+        if os.environ.get("LLM_REFINAR") == "1":  # opcional: IA só nos itens marcados para revisar (limite por PDF)
+            from llm import LLM, SemProvedor
+            from refinar import refinar_questao
+            ia, gastas = LLM(), 0
+            for q in questoes:
+                if not q["revisar"] or gastas >= int(os.environ.get("LLM_MAX_POR_PDF", "40")): continue
+                try:
+                    res, _ = refinar_questao(q, ia); gastas += 1
+                except (SemProvedor, ValueError): break  # sem IA disponível: segue com a extração local
+                if res:
+                    q.update(tipo=res["tipo"], enunciado=res["enunciado"], revisar=False)
+                    q["opcoes"] = res["opcoes"]
         imagens = {p.name: base64.b64encode(p.read_bytes()).decode() for p in (tmp / "imagens").glob("*.png")}
     avisos = []
     for g in extrair.lacunas(questoes):
