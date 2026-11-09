@@ -24,4 +24,11 @@ zera(); os.environ["LLM_LIMITE_NVIDIA"] = "1"; ia, c = novo([OK, OK]); ia.chat([
 zera(); os.environ["LLM_LIMITE_NVIDIA"] = "0"
 VAZIO = (200, {"choices": [{"message": {"content": None}}]}, {})
 ia, c = novo([VAZIO, OK]); assert ia.chat([])[1] == "groq" and len(c) == 2                                          # content null: troca de provedor
+zera(); os.environ["LLM_LIMITE_NVIDIA"] = "0"
+ia, c = novo([(404, {"_erro": "sem acesso"}, {}), OK, OK]); ia.chat([]); assert ia.chat([])[1] == "groq" and len(c) == 3      # 404: nvidia fica de fora nas chamadas seguintes
+zera(); ia, c = novo([(404, {}, {}), (429, {}, {"Retry-After": "90"}), (500, {}, {})] + [(500, {}, {})] * 3)
+try: ia.chat([]); assert False
+except SemProvedor as e: assert all(n in str(e) for n in ("nvidia", "groq", "ollama"))                                   # erro lista TODOS os provedores
+os.environ["NVIDIA_MODEL"] = "nvidia  meta/llama-3.2-90b-vision-instruct"
+assert LLM(ordem=["nvidia"]).provs[0]["modelo"] == "meta/llama-3.2-90b-vision-instruct"; del os.environ["NVIDIA_MODEL"]  # espaço colado no .env
 print("todos os testes passaram")

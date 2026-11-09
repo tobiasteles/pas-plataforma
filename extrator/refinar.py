@@ -3,7 +3,7 @@ Uso:  python refinar.py entrada.json saida.json [--max 50] [--so-rever]
 - só chama a IA nas questões com revisar=true (as boas nem são enviadas: economiza cota)
 - guarda cada resultado em .refinar_cache.json: rodar de novo NÃO repete o que já foi feito
 - se a IA devolver algo inválido, a questão fica como estava"""
-import json, re, sys
+import json, os, re, sys, time
 from pathlib import Path
 from llm import LLM, SemProvedor
 
@@ -53,22 +53,46 @@ def main(ent, sai, maximo=50, so_rever=True):
     dados = json.loads(Path(ent).read_text(encoding="utf-8"))
     cache = ler_cache()
     ia, feitas, melhoradas = LLM(), 0, 0
-    print("Provedores ativos:", ", ".join(f"{p['nome']} ({p['modelo']})" for p in ia.provs) or "NENHUM — confira o .env")
-    for q in dados["questoes"]:
-        if so_rever and not q.get("revisar"): continue
-        if q["id"] in cache: res = cache[q["id"]]
-        else:
-            if feitas >= maximo: continue
-            try: res, prov = refinar_questao(q, ia); feitas += 1
-            except SemProvedor as e: print("parei:", e); break
-            except (json.JSONDecodeError, KeyError, TypeError): res = None
-            cache[q["id"]] = res; CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
-        if res:
-            q.update(tipo=res["tipo"], enunciado=sem_numero(res["enunciado"], q["numero"]), revisar=False)
-            if res["opcoes"]: q["opcoes"] = res["opcoes"]
-            else: q.pop("opcoes", None)
-            melhoradas += 1
-    Path(sai).write_text(json.dumps(dados, ensure_ascii=False), encoding="utf-8")
+    print("Provedores ativos:", ", ".join(f"{p['nome']} ({p['modelo']})" for p in ia.provs) or "NENHUM — confira o .env", flush=True)
+    pendentes = sum(1 for q in dados["questoes"] if q.get("revisar") and q["id"] not in cache)
+    print(f"{pendentes} questões ainda sem resposta no cache; vou fazer até {min(maximo, pendentes)} chamadas. Ctrl+C para parar com segurança.", flush=True)
+
+    def salvar():
+        Path(sai).write_text(json.dumps(dados, ensure_ascii=False), encoding="utf-8")
+
+    parar = False
+    try:
+        for q in dados["questoes"]:
+            if so_rever and not q.get("revisar"): continue
+            if q["id"] in cache: res = cache[q["id"]]
+            else:
+                if feitas >= maximo: continue
+                t0 = time.monotonic(); res, prov, esperas = None, "?", 0
+                while True:
+                    try:
+                        res, prov = refinar_questao(q, ia); feitas += 1; break
+                    except SemProvedor as e:
+                        espera = ia.espera_minima()
+                        if espera is not None and esperas < 30:  # provedores só em pausa: espera e tenta de novo
+                            esperas += 1; print(f"Provedores ocupados; aguardando {espera + 2:.0f}s e continuando...", flush=True)
+                            time.sleep(espera + 2); continue
+                        print("parei:", e, flush=True); parar = True; break
+                    except (json.JSONDecodeError, KeyError, TypeError):
+                        feitas += 1; break
+                if parar: break
+                cache[q["id"]] = res; CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+                print(f"[{feitas}/{min(maximo, pendentes)}] {q['id']} -> {prov}, {time.monotonic() - t0:.0f}s, {'melhorada' if res else 'IA não devolveu algo válido (fica como estava)'}", flush=True)
+                if feitas % 10 == 0: salvar()  # grava o resultado parcial a cada 10 chamadas
+                time.sleep(float(os.environ.get("LLM_PAUSA", "3")))  # pausa: evita estourar o limite por minuto
+            if res:
+                q.update(tipo=res["tipo"], enunciado=sem_numero(res["enunciado"], q["numero"]), revisar=False)
+                if res["opcoes"]: q["opcoes"] = res["opcoes"]
+                else: q.pop("opcoes", None)
+                melhoradas += 1
+    except KeyboardInterrupt:
+        print("\nInterrompido. O que já foi feito está no cache; salvando o arquivo de saída...", flush=True)
+    salvar()
+    print("Respostas por provedor:", ia.ok or "nenhuma")
     print(f"{feitas} chamadas novas, {melhoradas} questões melhoradas, restam {sum(bool(q.get('revisar')) for q in dados['questoes'])} para revisar")
 
 

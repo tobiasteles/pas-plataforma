@@ -61,6 +61,7 @@ class LLM:
         nomes = ordem or [n.strip() for n in os.environ.get("LLM_ORDER", "nvidia,groq,ollama").split(",") if n.strip()]
         self.provs = [p for p in (self._cfg(n) for n in nomes if n in PADROES) if p]
         self.fora = {}  # nome -> instante até o qual ficamos longe (cota/limite) ou inf (chave inválida)
+        self.ok = {}    # respostas bem-sucedidas por provedor (para o resumo final)
         self.mem = {}   # contagem em memória (vale mesmo se o arquivo de uso não puder ser gravado)
         self.log = []   # (provedor, motivo) — sem chaves nem prompts
 
@@ -74,7 +75,7 @@ class LLM:
             return None
         if n == "ollama" and chave and not os.environ.get("OLLAMA_BASE_URL"):
             url = "https://ollama.com/v1"  # chave de API do Ollama = nuvem (ollama.com/settings/keys)
-        return {"nome": n, "url": os.environ.get(f"{up}_BASE_URL", url).rstrip("/"), "modelo": os.environ.get(f"{up}_MODEL", modelo),
+        return {"nome": n, "url": os.environ.get(f"{up}_BASE_URL", url).rstrip("/"), "modelo": (os.environ.get(f"{up}_MODEL", modelo).split() or [modelo])[-1],  # tolera espaços colados por engano
                 "chave": chave, "limite": int(os.environ.get(f"LLM_LIMITE_{up}", "0") or 0)}
 
     # ---- contador diário: troca de provedor antes de a cota acabar
@@ -107,21 +108,24 @@ class LLM:
                 if st == 200:
                     try: texto = dados["choices"][0]["message"]["content"]
                     except (KeyError, IndexError, TypeError): texto = None
-                    if isinstance(texto, str) and texto.strip(): return texto, p["nome"]
+                    if isinstance(texto, str) and texto.strip():
+                        self.ok[p["nome"]] = self.ok.get(p["nome"], 0) + 1; return texto, p["nome"]
                     try: fim = dados["choices"][0].get("finish_reason")
                     except Exception: fim = None
                     self.log.append((p["nome"], f"resposta vazia (finish_reason={fim}; modelo de raciocínio? aumente LLM_MAX_TOKENS ou troque o modelo)")); break  # tenta o próximo provedor
                 if st in (400, 401, 403, 404):  # não adianta repetir
                     self.log.append((p["nome"], f"HTTP {st} (sem retry): {str(dados.get('_erro', ''))[:160]}"))
-                    if st in (401, 403): self.fora[p["nome"]] = float("inf")
+                    if st in (401, 403, 404): self.fora[p["nome"]] = float("inf")  # chave/modelo sem acesso: não insiste
                     break
                 if st in RETENTAVEL or st == 0:
                     espera = float(cab.get("Retry-After", cab.get("retry-after", 0)) or 0) or min(30, 2 ** t) + random.random()
-                    self.log.append((p["nome"], f"HTTP {st}, tentativa {t + 1}"))
+                    self.log.append((p["nome"], f"HTTP {st} (limite de uso; espera {espera:.0f}s), tentativa {t + 1}" if st == 429 else f"HTTP {st}, tentativa {t + 1}"))
                     if st == 429 and espera > 20:  # cota longa: troca de provedor em vez de esperar
                         self.fora[p["nome"]] = time.time() + espera; break
                     if t + 1 < self.tentativas: self.dormir(espera)
                     else: self.fora[p["nome"]] = time.time() + 300
                     continue
                 break
-        raise SemProvedor("nenhum provedor respondeu: " + "; ".join(f"{a}: {b}" for a, b in self.log[-6:]))
+        ult = {}
+        for a, b in self.log: ult[a] = b
+        raise SemProvedor("nenhum provedor respondeu: " + " | ".join(f"{a}: {b}" for a, b in ult.items()))
