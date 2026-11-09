@@ -94,6 +94,12 @@ class LLM:
         if self.fora.get(p["nome"], 0) > time.time(): return False
         return not (p["limite"] and max(self._uso()["n"].get(p["nome"], 0), self.mem.get(p["nome"], 0)) >= p["limite"])
 
+    def espera_minima(self):
+        """Segundos até o primeiro provedor em pausa temporária voltar; None se nenhum volta sozinho."""
+        agora = time.time()
+        fut = [v - agora for v in self.fora.values() if v != float("inf") and v > agora]
+        return min(fut) if fut else None
+
     def chat(self, mensagens, json_mode=False, max_tokens=None):
         """Devolve (texto, provedor). Levanta SemProvedor se todos falharem."""
         max_tokens = max_tokens or int(os.environ.get("LLM_MAX_TOKENS", "1500"))
@@ -123,9 +129,12 @@ class LLM:
                     if st == 429 and espera > 20:  # cota longa: troca de provedor em vez de esperar
                         self.fora[p["nome"]] = time.time() + espera; break
                     if t + 1 < self.tentativas: self.dormir(espera)
-                    else: self.fora[p["nome"]] = time.time() + 300
+                    else: self.fora[p["nome"]] = time.time() + 120
                     continue
+                self.log.append((p["nome"], f"HTTP {st} (inesperado): {str(dados.get('_erro', ''))[:160]}"))
+                if st == 402: self.fora[p["nome"]] = float("inf")  # sem saldo/plano: não insiste
                 break
         ult = {}
-        for a, b in self.log: ult[a] = b
+        for a, b in self.log:
+            if not (b.startswith("pulado") and a in ult): ult[a] = b  # mantém o motivo real, não o "pulado"
         raise SemProvedor("nenhum provedor respondeu: " + " | ".join(f"{a}: {b}" for a, b in ult.items()))

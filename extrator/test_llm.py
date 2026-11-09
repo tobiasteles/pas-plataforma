@@ -31,4 +31,9 @@ try: ia.chat([]); assert False
 except SemProvedor as e: assert all(n in str(e) for n in ("nvidia", "groq", "ollama"))                                   # erro lista TODOS os provedores
 os.environ["NVIDIA_MODEL"] = "nvidia  meta/llama-3.2-90b-vision-instruct"
 assert LLM(ordem=["nvidia"]).provs[0]["modelo"] == "meta/llama-3.2-90b-vision-instruct"; del os.environ["NVIDIA_MODEL"]  # espaço colado no .env
+zera(); os.environ["LLM_LIMITE_NVIDIA"] = "0"
+ia, c = novo([(404, {}, {}), (429, {}, {"Retry-After": "90"}), (418, {"_erro": "chaleira"}, {})])
+try: ia.chat([]); assert False
+except SemProvedor as e: assert "418" in str(e) and "ollama" in str(e)                                                  # status inesperado agora aparece
+assert 80 < ia.espera_minima() <= 91                                                                                    # groq volta em ~90s
 print("todos os testes passaram")
