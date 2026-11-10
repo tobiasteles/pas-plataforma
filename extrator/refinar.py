@@ -30,6 +30,7 @@ def sem_numero(texto, n):
 
 def validar(r):
     if not isinstance(r, dict) or r.get("erro") or r.get("tipo") not in TIPOS: return None
+    if "\ufffd" in json.dumps(r, ensure_ascii=False): return None  # texto quebrado: não aceita
     e = (r.get("enunciado") or "").strip()
     if not 15 <= len(e) <= 3000: return None
     op = r.get("opcoes")
@@ -52,6 +53,11 @@ def main(ent, sai, maximo=50, so_rever=True):
         sys.exit(f"Não achei o arquivo: {Path(ent).resolve()}\nColoque o import-parte-01.json nessa pasta ou passe o caminho completo, ex.: C:\\Users\\Tobias\\Downloads\\import-parte-01.json")
     dados = json.loads(Path(ent).read_text(encoding="utf-8"))
     cache = ler_cache()
+    ruins = [k for k, v in cache.items() if v and "\ufffd" in json.dumps(v, ensure_ascii=False)]
+    for k in ruins: del cache[k]
+    if ruins:
+        CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+        print(f"Removi {len(ruins)} resultado(s) com caracteres quebrados (�) do cache; essas questões serão refeitas.", flush=True)
     ia, feitas, melhoradas = LLM(), 0, 0
     print("Provedores ativos:", ", ".join(f"{p['nome']} ({p['modelo']})" for p in ia.provs) or "NENHUM — confira o .env", flush=True)
     pendentes = sum(1 for q in dados["questoes"] if q.get("revisar") and q["id"] not in cache)
@@ -73,8 +79,9 @@ def main(ent, sai, maximo=50, so_rever=True):
                         res, prov = refinar_questao(q, ia); feitas += 1; break
                     except SemProvedor as e:
                         espera = ia.espera_minima()
-                        if espera is not None and esperas < 30:  # provedores só em pausa: espera e tenta de novo
-                            esperas += 1; print(f"Provedores ocupados; aguardando {espera + 2:.0f}s e continuando...", flush=True)
+                        motivo = str(e).replace("nenhum provedor respondeu: ", "")
+                        if espera is not None and espera <= 300 and esperas < 3:  # pausa curta: espera e tenta de novo (no máx. 3x)
+                            esperas += 1; print(f"Provedores ocupados ({motivo}); aguardando {espera + 2:.0f}s...", flush=True)
                             time.sleep(espera + 2); continue
                         print("parei:", e, flush=True); parar = True; break
                     except (json.JSONDecodeError, KeyError, TypeError):
