@@ -1,3 +1,15 @@
+# ATUALIZAÇÃO (Etapa 1) — fluxo novo, sem IA
+
+```
+PDF ─► extrair_geo.py ─► classificar_v2.py ─► relatorio.py ─► saida/<pas3-2023>/{prova.json, imagens/, recortes/, relatorio.md}
+```
+Contrato do JSON (por questão): id, prova, etapa, ano, subprograma, numero, parte, lingua, tipo (certo_errado|numerica|multipla_escolha|discursiva),
+tipo_origem, enunciado, opcoes[{letra,texto}], contexto_id, imagens[], crop_image, proveniencia[{pdf,pagina,coluna,bbox}],
+gabarito, status_gabarito, gabarito_obs, origem_extracao, disciplinas[], disciplina_principal, confianca, motivo, origem_disciplina,
+precisa_revisar_disciplina, sugestoes_disciplina[], revisar, motivos_revisao[]. Textos-base: `contextos[{id,text,images,crop_image,proveniencia}]`.
+Os números antigos deste arquivo (800 questões, 632 pendentes) estão obsoletos: o banco será refeito dos PDFs.
+
+---
 # Mapa do projeto PAS·Questões (trienio) — para não refazer
 
 ## Fluxo

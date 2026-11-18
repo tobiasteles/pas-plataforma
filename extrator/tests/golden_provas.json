@@ -1,0 +1,135 @@
+{
+ "_aviso": "Tipos (C/B/D) conferidos com os PDFs de gabarito oficiais; o resto foi gerado pelo extrator atual e revisado por amostragem. Se mudar de propósito, regenere com tests/gerar_golden.py.",
+ "provas": {
+  "pas3-2008": {
+   "total": 140,
+   "tipos_conferidos_com_gabarito": {
+    "C": [
+     "ing10",
+     "fra10",
+     "esp10",
+     "29",
+     "58",
+     "63"
+    ],
+    "B": [
+     "53",
+     "81",
+     "107"
+    ],
+    "D": [
+     "54",
+     "69",
+     "108"
+    ]
+   },
+   "contextos": 35,
+   "enunciado_inicio": {
+    "pas3-2008-ing-q003": "Electronic media are changing not only i",
+    "pas3-2008-fra-q003": "La révolution informatique et communicat",
+    "pas3-2008-esp-q003": "Las palabras “comunicación” (R.3) y “reú",
+    "pas3-2008-q011": "Conclui-se desses gráficos que é iminent",
+    "pas3-2008-q037": "As condições de trabalho mencionadas no ",
+    "pas3-2008-q059": "O campo magnético gerado em qualquer pon",
+    "pas3-2008-q080": "O conceito de ionização foi explorado po",
+    "pas3-2008-q100": "Considerando-se que olho verde e cabelo ",
+    "pas3-2008-q115": "Com o general Figueiredo, o ciclo milita"
+   }
+  },
+  "pas3-2015": {
+   "total": 140,
+   "tipos_conferidos_com_gabarito": {
+    "C": [
+     "esp10",
+     "fra10",
+     "ing10",
+     "28",
+     "29",
+     "43",
+     "51",
+     "58",
+     "74",
+     "75",
+     "77",
+     "82",
+     "83",
+     "84",
+     "97",
+     "98",
+     "111",
+     "120"
+    ],
+    "B": [
+     "72",
+     "92",
+     "102",
+     "115",
+     "119"
+    ],
+    "D": [
+     "99",
+     "108"
+    ]
+   },
+   "contextos": 38,
+   "enunciado_inicio": {
+    "pas3-2015-esp-q003": "Resquicios naturales y humanos más cerca",
+    "pas3-2015-fra-q003": "Le film expose les fameuses photos de Sa",
+    "pas3-2015-ing-q003": "Sebastiao Salgado’s images of Serra Pela",
+    "pas3-2015-q011": "A estrutura da obra de Orozco está inser",
+    "pas3-2015-q037": "Ao inverter o mapa da América do Sul, o ",
+    "pas3-2015-q059": "Os dois fragmentos de textos se contrapõ",
+    "pas3-2015-q080": "Interações do tipo epistasia são exemplo",
+    "pas3-2015-q100": "A razão entre as energias gravitacionais",
+    "pas3-2015-q115": "Calcule, em kJ/mol, o módulo da entalpia"
+   }
+  },
+  "pas3-2023": {
+   "total": 140,
+   "tipos_conferidos_com_gabarito": {
+    "C": [
+     "fra10",
+     "ing10",
+     "esp10",
+     "16",
+     "17",
+     "26",
+     "35",
+     "44",
+     "73",
+     "81",
+     "89",
+     "99",
+     "108",
+     "113",
+     "120"
+    ],
+    "B": [
+     "fra9",
+     "ing9",
+     "esp9",
+     "59",
+     "61",
+     "92",
+     "93",
+     "103"
+    ],
+    "D": [
+     "114"
+    ]
+   },
+   "contextos": 36,
+   "enunciado_inicio": {
+    "pas3-2023-fra-q003": "L’écrivaine franco-antillaise prend conn",
+    "pas3-2023-ing-q003": "In the passage “The stump of Kirchner’s ",
+    "pas3-2023-esp-q003": "El apellido del artista europeo aparece ",
+    "pas3-2023-q011": "No fragmento apresentado, a mensagem dad",
+    "pas3-2023-q037": "O quadrilátero O(cid:8)(cid:11)(cid:14) ",
+    "pas3-2023-q059": "Supondo que o consumo de energia elétric",
+    "pas3-2023-q080": "A quantidade de maneiras de permutar as ",
+    "pas3-2023-q100": "Caso uma das lâmpadas queime, de maneira",
+    "pas3-2023-q115": "Na célula vegetal, o processo de osmose "
+   }
+  }
+ }
+}

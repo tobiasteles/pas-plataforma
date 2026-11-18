@@ -1,10 +1,12 @@
 node_modules
 .next
+# segredos: nunca vão para o git (só o .env.example)
 .env*
 !.env.example
-  .env
-  .env.local
-  extrator/.env
-  .refinar_cache.json
-  .llm_uso.json
-  __pycache__/
+# caches e saídas do extrator
+.refinar_cache.json
+.llm_uso.json
+__pycache__/
+*.pyc
+extrator/tests/_saida/
+saida/
